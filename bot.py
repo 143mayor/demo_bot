@@ -1,0 +1,119 @@
+import asyncio
+from aiogram import Bot, Dispatcher, F
+from aiogram.types import Message
+from aiogram.filters import CommandStart
+
+TOKEN = "8380971426:AAEW1eseC5uEj10B7J5SMl8ntjIvIL1zwVk"
+ADMIN_CHAT_ID = -5204529452
+
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
+
+# временное хранилище данных пользователей
+users = {}
+
+@dp.message(CommandStart())
+async def start(message: Message):
+    users[message.from_user.id] = {
+        "demos": []
+    }
+
+    await message.answer(
+        "Привет! Это A&R-бот лейбла Инсайт Мьюзик 👋\n\n"
+        "Короткие правила:\n"
+        "1. Необходимо указать творческий псевдоним и город проживания.\n"
+        "2. Необходимо прислать ссылку на карточку артиста в Яндекс Музыке"
+        " (если есть).\n"
+        "3. Необходимо указать ссылки на актуальные соцсети (Instagram, TikTok, Telegram, VK).\n"
+        "4. Необходимо прислать личный контакт для связи в Telegram.\n"
+        "5. Можно прислать не более 5 демо в формате mp3.\n\n"
+        "Поехали! Напиши в ответном сообщении псевдоним и город проживания.\n"
+    )
+
+@dp.message(F.text)
+async def handle_text(message: Message):
+    user = users.get(message.from_user.id)
+    if not user:
+        return
+
+    if "name_city" not in user:
+        user["name_city"] = message.text
+        await message.answer(
+            "Супер, теперь пришли ссылку на карточку артиста в Яндекс Музыке, "
+            "или напиши «нет», если ее еще нет."
+        )
+        return
+
+    if "yandex" not in user:
+        user["yandex"] = message.text
+        await message.answer(
+            "Класс, теперь пришли ссылки на соцсети "
+            "(Instagram, TikTok, канал в Telegram, сообщество в VK и др.). "
+            "Каждая ссылка должна быть с новой строки."
+        )
+        return
+
+    if "socials" not in user:
+        user["socials"] = message.text
+        await message.answer(
+            "Круто, теперь напиши контакт для связи в Telegram в формате @username."
+        )
+        return
+
+    if "contact" not in user:
+        user["contact"] = message.text
+        await message.answer(
+            "А теперь самое главное! Загрузи до 5 демо в формате mp3.\n"
+            "Когда загрузка файлов закончится, напиши «Готово»."
+        )
+        return
+
+    # проверка "готово" должна быть **внутри функции**
+    if message.text.strip().lower() == "готово":
+        await send_to_admin(message.from_user.id)
+        await message.answer(
+            "Спасибо! Демо отправлены на рассмотрение. "
+            "Если они понравятся команде, то мы обязательно с тобой свяжемся 🙌\n\n"
+            "Нажми /start, чтобы запустить бота заново."
+        )
+        users.pop(message.from_user.id)
+        return
+
+@dp.message(F.audio)
+async def handle_audio(message: Message):
+    user = users.get(message.from_user.id)
+    if not user:
+        return
+
+    if len(user["demos"]) >= 5:
+        await message.answer("Можно прислать максимум 5 демо.")
+        return
+
+    if message.audio.mime_type != "audio/mpeg":
+        await message.answer("Можно прислать только mp3 файлы.")
+        return
+
+    user["demos"].append(message.audio.file_id)
+    await message.answer(f"Демо принято ({len(user['demos'])}/5).")
+
+async def send_to_admin(user_id: int):
+    user = users[user_id]
+
+    text = (
+        "🎧 Йо, поступило новое демо!\n\n"
+        f"Артист / Город:\n{user['name_city']}\n\n"
+        f"Яндекс Музыка:\n{user['yandex']}\n\n"
+        f"Соцсети:\n{user['socials']}\n\n"
+        f"Контакт:\n{user['contact']}"
+    )
+
+    await bot.send_message(ADMIN_CHAT_ID, text)
+
+    for file_id in user["demos"]:
+        await bot.send_audio(ADMIN_CHAT_ID, file_id)
+
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
