@@ -3,7 +3,7 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message
 from aiogram.filters import CommandStart
 
-TOKEN = "8380971426:AAEW1eseC5uEj10B7J5SMl8ntjIvIL1zwVk"
+TOKEN = "8380971426:AAEQ8CdUiCkHbgoPKAK_MDkjPPY_mjrJIsY"
 ADMIN_CHAT_ID = -5204529452
 
 bot = Bot(token=TOKEN)
