@@ -113,6 +113,7 @@ async def send_to_admin(user_id: int):
         await bot.send_audio(ADMIN_CHAT_ID, file_id)
 
 async def main():
+    print("BOT STARTED")  # 👈 добавляем
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
