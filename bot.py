@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-TOKEN = "8380971426:AAEQ8CdUiCkHbgoPKAK_MDkjPPY_mjrJIsY"  # <-- вставь сюда новый токен
+TOKEN = "8380971426:AAEQ8CdUiCkHbgoPKAK_MDkjPPY_mjrJIsY"  # <-- вставь сюда твой новый токен
 ADMIN_CHAT_ID = -5204529452
 
 # временное хранилище данных пользователей
@@ -10,7 +10,7 @@ users = {}
 async def main():
     print("BOT STARTED")  # лог для проверки запуска
 
-    # ленивый импорт для уменьшения потребления памяти
+    # ------------------ ЛЕНИВЫЙ ИМПОРТ ------------------
     from aiogram import Bot, Dispatcher, F
     from aiogram.types import Message
     from aiogram.filters import CommandStart
@@ -25,7 +25,6 @@ async def main():
     dp = Dispatcher()
 
     # ------------------ HANDLERS ------------------
-
     @dp.message(CommandStart())
     async def start(message: Message):
         users[message.from_user.id] = {"demos": []}
@@ -80,7 +79,7 @@ async def main():
             return
 
         if message.text.strip().lower() == "готово":
-            await send_to_admin(message.from_user.id, bot)
+            await send_to_admin(user_id=message.from_user.id, bot_instance=bot)
             await message.answer(
                 "Спасибо! Демо отправлены на рассмотрение. "
                 "Если они понравятся команде, то мы обязательно с тобой свяжемся 🙌\n\n"
